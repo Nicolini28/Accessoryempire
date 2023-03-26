@@ -1,0 +1,21 @@
+var PayhipThirdPartyAnalytics=(function(){function PayhipThirdPartyAnalytics(payhipGoogleCredentials,sellerGoogleCredentials,sellerFacebookCredentials){this.sellerGoogleCredentialsProvided=!!sellerGoogleCredentials;this.sellerFacebookCredentialsProvided=!!sellerFacebookCredentials;this.sellerGoogleAnalyticsVersionIsGA4=this.sellerGoogleCredentialsProvided&&(sellerGoogleCredentials.substring(0,2)=='G-');this.init(payhipGoogleCredentials,sellerGoogleCredentials,sellerFacebookCredentials);}
+PayhipThirdPartyAnalytics.prototype={init:function(payhipGoogleCredentials,sellerGoogleCredentials,sellerFacebookCredentials)
+{ga('create',payhipGoogleCredentials,'auto',{'name':'payhip'});if(this.sellerGoogleCredentialsProvided){ga('create',sellerGoogleCredentials,'auto',{'name':'seller'});}
+if(this.sellerFacebookCredentialsProvided){fbq('init',sellerFacebookCredentials);}},productViewed:function(productLink,useFacebookTrackPageView)
+{ga('payhip.send','pageview');if(this.sellerGoogleCredentialsProvided){ga('seller.send','pageview');}
+if(this.sellerFacebookCredentialsProvided){if(typeof useFacebookTrackPageView!=='undefined'&&useFacebookTrackPageView){fbq('track','PageView');}
+else{fbq('track','ViewContent',{content_type:'product',content_ids:[productLink]});}}},editorv2NonProductPageViewed:function()
+{ga('payhip.send','pageview');if(this.sellerGoogleCredentialsProvided){ga('seller.send','pageview');}
+if(this.sellerFacebookCredentialsProvided){fbq('track','PageView');}},itemAddedToCart:function()
+{ga('payhip.send','event','Purchasing Activity','Add to Cart');},checkoutStarted:function(transaction)
+{ga('payhip.send','event','Purchasing Activity','Start Checkout');if(this.sellerFacebookCredentialsProvided){var content_ids=[];for(var i=0;i<transaction.items.length;i++){var item=transaction.items[i];content_ids.push(item.productLink);}
+fbq('track','InitiateCheckout',{value:transaction.total,content_ids:content_ids,currency:transaction.currency,content_type:'product'});}},transactionCompleted:function(transaction)
+{if(this.sellerGoogleCredentialsProvided&&this.sellerGoogleAnalyticsVersionIsGA4){this.transactionCompletedForGA4(transaction);}
+ga('payhip.require','ecommerce');ga('payhip.ecommerce:clear');if(this.sellerGoogleCredentialsProvided){ga('seller.require','ecommerce');ga('seller.ecommerce:clear');}
+var gaTransaction={'id':transaction.transactionKey,'affiliation':'PayHip','revenue':transaction.total,'shipping':'','tax':'','currency':transaction.currency};ga('payhip.ecommerce:addTransaction',gaTransaction);if(this.sellerGoogleCredentialsProvided){ga('seller.ecommerce:addTransaction',gaTransaction);}
+for(var i=0;i<transaction.items.length;i++){var item=transaction.items[i];var gaItem={'id':transaction.transactionKey,'name':item.productName,'sku':item.productLink,'category':'eBook','price':item.pricePaid,'quantity':item.quantity,'currency':transaction.currency};ga('payhip.ecommerce:addItem',gaItem);if(this.sellerGoogleCredentialsProvided){ga('seller.ecommerce:addItem',gaItem);}}
+ga('payhip.ecommerce:send');if(this.sellerGoogleCredentialsProvided){ga('seller.ecommerce:send');}
+ga('payhip.send','event','Sale','',transaction.currency,transaction.total);if(this.sellerFacebookCredentialsProvided){var content_ids=[];for(var i=0;i<transaction.items.length;i++){var item=transaction.items[i];content_ids.push(item.productLink);}
+fbq('track','Purchase',{content_type:'product',content_ids:content_ids,value:transaction.total,currency:transaction.currency});}},transactionCompletedForGA4:function(transaction)
+{var gaTransaction={'transaction_id':transaction.transactionKey,'affiliation':'PayHip','value':transaction.total,'shipping':'','tax':'','currency':transaction.currency,'items':[]};for(var i=0;i<transaction.items.length;i++){var item=transaction.items[i];var gaItem={'item_id':item.productLink,'item_name':item.productName,'item_category':'eBook','price':item.pricePaid,'quantity':item.quantity,'currency':transaction.currency};gaTransaction.items.push(gaItem);}
+if(this.sellerGoogleCredentialsProvided){gtag('event','purchase',gaTransaction);}}};return PayhipThirdPartyAnalytics;})();
